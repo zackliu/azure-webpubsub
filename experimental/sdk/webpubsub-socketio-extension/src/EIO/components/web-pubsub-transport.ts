@@ -5,7 +5,7 @@ import { debugModule, toAsync } from "../../common/utils";
 import { ClientConnectionContext } from "./client-connection-context";
 import { decodeStringPartial, PartialSioPacket } from "../../SIO/components/decoder";
 import { WEBPUBSUB_CLIENT_CONNECTION_FILED_NAME, WEBPUBSUB_TRANSPORT_NAME } from "./constants";
-import { Transport, Socket as EioSocket } from "engine.io";
+import { Transport } from "engine.io";
 import { Packet as EioPacket, RawData } from "engine.io-parser";
 import { PacketType as SioPacketType } from "socket.io-parser";
 
@@ -18,10 +18,6 @@ const debug = debugModule("wps-sio-ext:EIO:WebPubSubTransport");
  **/
 export class WebPubSubTransport extends Transport {
   public clientConnectionContext: ClientConnectionContext;
-
-  // `socket` is the one which manages this transport. This property enables tranposrt call `flush` method of its manager Socket.
-  // Reference: https://github.com/socketio/engine.io/blob/6.4.2/lib/socket.ts
-  public socket: EioSocket = null;
 
   // Reference: https://github.com/socketio/engine.io-parser/blob/5.0.7/lib/encodePacket.ts#L3
   private _encodeEioPacketAsync: (packet: EioPacket, supportsBinary: boolean) => Promise<RawData>;
@@ -104,13 +100,10 @@ _buffer=${JSON.stringify(this._buffer)}`);
     }
 
     this.writable = true;
-    if (this.socket) {
-      debug(`send, call method flush of transport's father socket`);
-      this.socket["flush"]();
-    } else {
-      debug(`send, not stored transport's father socket`);
-    }
 
+    // drain will call Socket.Flush()
+    debug(`send, call method flush of transport's father socket`);
+    this.emit("drain");
     debug(`send, finish, _buffer.length=${this._buffer.length}, _buffer=${JSON.stringify(this._buffer)}`);
   }
 

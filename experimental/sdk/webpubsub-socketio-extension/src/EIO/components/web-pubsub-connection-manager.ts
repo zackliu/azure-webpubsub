@@ -20,6 +20,9 @@ import {
 import type { BaseServer } from "engine.io";
 import { ConnectRequest as WebPubSubConnectRequest, WebPubSubEventHandler } from "@azure/web-pubsub-express";
 import { WebPubSubServiceCaller } from "../../serverProxies";
+import type {
+  IncomingMessage,
+} from "http";
 
 const debug = debugModule("wps-sio-ext:EIO:ConnectionManager");
 
@@ -40,6 +43,8 @@ export class WebPubSubConnectionManager {
    * Client for connecting to a Web PubSub hub
    */
   public service: WebPubSubServiceCaller;
+
+  public onHandshake: (req: unknown, closeConnection: (errorCode, errorContext) => void) => Promise<void>;
 
   /**
    * Map from the `connectionId` of each client to its corresponding logical `ClientConnectionContext`.
@@ -114,6 +119,12 @@ export class WebPubSubConnectionManager {
 
           this._candidateSids.push(connectionId);
           this._clientConnections.set(connectionId, context);
+
+          await this.onHandshake(connectReq, (errorCode: number, errorContext: unknown) => {
+            const message =
+              errorContext && errorContext["message"] ? errorContext["message"] : EIO_CONNECTION_ERROR[errorCode];
+            context.onRefuseEioConnection(message);
+          })
 
           await this.eioServer["handshake"](
             WEBPUBSUB_TRANSPORT_NAME,

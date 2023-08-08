@@ -6,6 +6,11 @@ import { WebPubSubTransport } from "./components/web-pubsub-transport";
 import { WebPubSubConnectionManager } from "./components/web-pubsub-connection-manager";
 import * as engine from "engine.io";
 import { InprocessServerProxy } from "../serverProxies";
+import type {
+  IncomingMessage,
+  Server as HttpServer,
+  ServerResponse,
+} from "http";
 
 const debug = debugModule("wps-sio-ext:EIO:index");
 debug("load");
@@ -78,4 +83,36 @@ export class WebPubSubEioServer extends engine.Server {
    * @returns a list of available transports for upgrade given a certain Transport `transport`
    */
   public override upgrades = (transport: string): Array<string> => [];
+
+  /**
+   * Apply the middlewares to the request.
+   *
+   * @param req
+   * @param res
+   * @param callback
+   * @protected
+   */
+  protected override async _applyMiddlewares(
+    req: IncomingMessage,
+    res: ServerResponse,
+    callback: () => void
+  ) {
+    if (this.middlewares.length === 0) {
+      debug("no middleware to apply, skipping");
+      return callback();
+    }
+
+    const apply = async (i) => {
+      debug("applying middleware n°%d", i + 1);
+      this.middlewares[i](req, res, async () => {
+        if (i + 1 < this.middlewares.length) {
+          await apply(i + 1);
+        } else {
+          await callback();
+        }
+      });
+    };
+
+    await apply(0);
+  }
 }
