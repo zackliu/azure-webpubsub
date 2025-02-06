@@ -4,7 +4,7 @@
     "FUNCTIONS_WORKER_RUNTIME": "node",
     "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "WebPubSubForSocketIOConnectionString": ""
+    "WebPubSubForSocketIOConnectionString": "Endpoint=https://chenylsiou1perf.webpubsub.azure.com;AccessKey=32fhT41nJMgHZj94C2F8HY2P0hL9H2nh8SGPm11yefOjdg71ag06JQQJ99BAACHYHv6XJ3w3AAAAAWPSWW2Y;Version=1.0;"
   },
   "ConnectionStrings": {}
 }

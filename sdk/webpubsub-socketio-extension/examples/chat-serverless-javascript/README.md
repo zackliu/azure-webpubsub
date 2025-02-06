@@ -14,6 +14,7 @@ func settings add WebPubSubForSocketIOConnectionString "<connection string>"
 # How to run
 
 ```bash
+npm install
 func extensions sync
 func start
 ```
